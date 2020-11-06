@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: 05-Nov-2020 às 03:00
+-- Generation Time: 06-Nov-2020 às 03:49
 -- Versão do servidor: 10.1.37-MariaDB
 -- versão do PHP: 7.2.12
 
@@ -19,10 +19,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `pedidosvenda`
+-- Database: `pedidos`
 --
-CREATE DATABASE IF NOT EXISTS `pedidosvenda` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE `pedidosvenda`;
+CREATE DATABASE IF NOT EXISTS `pedidos` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE `pedidos`;
 
 -- --------------------------------------------------------
 
@@ -36,6 +36,10 @@ CREATE TABLE `clientes` (
   `cidade` varchar(60) NOT NULL,
   `uf` char(2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- RELATIONSHIPS FOR TABLE `clientes`:
+--
 
 --
 -- Extraindo dados da tabela `clientes`
@@ -76,6 +80,19 @@ CREATE TABLE `pedidos` (
   `valortotal` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- RELATIONSHIPS FOR TABLE `pedidos`:
+--   `codcliente`
+--       `clientes` -> `codigo`
+--
+
+--
+-- Extraindo dados da tabela `pedidos`
+--
+
+INSERT INTO `pedidos` (`codigo`, `codcliente`, `dataemissao`, `valortotal`) VALUES
+(20, 1, '2020-11-05 23:39:55', 68.74);
+
 -- --------------------------------------------------------
 
 --
@@ -91,6 +108,23 @@ CREATE TABLE `pedidosprodutos` (
   `valortotal` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- RELATIONSHIPS FOR TABLE `pedidosprodutos`:
+--   `codpedido`
+--       `pedidos` -> `codigo`
+--   `codproduto`
+--       `produtos` -> `codigo`
+--
+
+--
+-- Extraindo dados da tabela `pedidosprodutos`
+--
+
+INSERT INTO `pedidosprodutos` (`codigo`, `codpedido`, `codproduto`, `quantidade`, `valorunitario`, `valortotal`) VALUES
+(28, 20, 1, 1, 10.11, 0),
+(29, 20, 2, 2, 11.12, 0),
+(30, 20, 3, 3, 12.13, 0);
+
 -- --------------------------------------------------------
 
 --
@@ -100,34 +134,38 @@ CREATE TABLE `pedidosprodutos` (
 CREATE TABLE `produtos` (
   `codigo` int(11) NOT NULL,
   `descricao` varchar(150) NOT NULL,
-  `precovenda` varchar(45) NOT NULL
+  `precovenda` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- RELATIONSHIPS FOR TABLE `produtos`:
+--
 
 --
 -- Extraindo dados da tabela `produtos`
 --
 
 INSERT INTO `produtos` (`codigo`, `descricao`, `precovenda`) VALUES
-(1, 'Mouse', '10.11'),
-(2, 'Teclado', '11.12'),
-(3, 'Cartão de memória', '12.13'),
-(4, 'Pendrive', '13.14'),
-(5, 'Cartucho de tinta', '14.15'),
-(6, 'Filtro de linha', '15.16'),
-(7, 'Switch', '16.17'),
-(8, 'Telefone', '17.18'),
-(9, 'Roteador', '18.19'),
-(10, 'Projetor', '20.21'),
-(11, 'Monitor', '21.22'),
-(12, 'Televisão', '22.23'),
-(13, 'Chave de fenda', '23.24'),
-(14, 'Chave Philips', '24.25'),
-(15, 'Chave de precisão', '25.26'),
-(16, 'Alicate de bico', '26.27'),
-(17, 'Alicate de pressão', '27.28'),
-(18, 'Alicate de crimpar', '28.29'),
-(19, 'Alicate de inserção', '30.31'),
-(20, 'Caneta', '31.32');
+(1, 'Mouse', 10.11),
+(2, 'Teclado', 11.12),
+(3, 'Cartão de memória', 12.13),
+(4, 'Pendrive', 13.14),
+(5, 'Cartucho de tinta', 14.15),
+(6, 'Filtro de linha', 15.16),
+(7, 'Switch', 16.17),
+(8, 'Telefone', 17.18),
+(9, 'Roteador', 18.19),
+(10, 'Projetor', 20.21),
+(11, 'Monitor', 21.22),
+(12, 'Televisão', 22.23),
+(13, 'Chave de fenda', 23.24),
+(14, 'Chave Philips', 24.25),
+(15, 'Chave de precisão', 25.26),
+(16, 'Alicate de bico', 26.27),
+(17, 'Alicate de pressão', 27.28),
+(18, 'Alicate de crimpar', 28.29),
+(19, 'Alicate de inserção', 30.31),
+(20, 'Caneta', 31.32);
 
 --
 -- Indexes for dumped tables
@@ -143,15 +181,16 @@ ALTER TABLE `clientes`
 -- Indexes for table `pedidos`
 --
 ALTER TABLE `pedidos`
-  ADD PRIMARY KEY (`codigo`);
+  ADD PRIMARY KEY (`codigo`),
+  ADD KEY `codcliente` (`codcliente`);
 
 --
 -- Indexes for table `pedidosprodutos`
 --
 ALTER TABLE `pedidosprodutos`
   ADD PRIMARY KEY (`codigo`),
-  ADD KEY `codpedido` (`codpedido`),
-  ADD KEY `codprodutos` (`codproduto`);
+  ADD KEY `fk_codpedido` (`codpedido`),
+  ADD KEY `fk_codprodutos` (`codproduto`);
 
 --
 -- Indexes for table `produtos`
@@ -173,13 +212,13 @@ ALTER TABLE `clientes`
 -- AUTO_INCREMENT for table `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `pedidosprodutos`
 --
 ALTER TABLE `pedidosprodutos`
-  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `codigo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `produtos`
@@ -195,14 +234,40 @@ ALTER TABLE `produtos`
 -- Limitadores para a tabela `pedidos`
 --
 ALTER TABLE `pedidos`
-  ADD CONSTRAINT `codcliente` FOREIGN KEY (`codigo`) REFERENCES `clientes` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `codcliente` FOREIGN KEY (`codcliente`) REFERENCES `clientes` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Limitadores para a tabela `pedidosprodutos`
 --
 ALTER TABLE `pedidosprodutos`
-  ADD CONSTRAINT `codpedido` FOREIGN KEY (`codpedido`) REFERENCES `pedidos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `codprodutos` FOREIGN KEY (`codproduto`) REFERENCES `produtos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_codpedido` FOREIGN KEY (`codpedido`) REFERENCES `pedidos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_codprodutos` FOREIGN KEY (`codproduto`) REFERENCES `produtos` (`codigo`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+--
+-- Metadata
+--
+USE `phpmyadmin`;
+
+--
+-- Metadata for table clientes
+--
+
+--
+-- Metadata for table pedidos
+--
+
+--
+-- Metadata for table pedidosprodutos
+--
+
+--
+-- Metadata for table produtos
+--
+
+--
+-- Metadata for database pedidos
+--
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
