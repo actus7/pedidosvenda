@@ -524,6 +524,11 @@ begin
         btnGravarPedido.Enabled := False;
         btnCancelarPedido.Enabled := False;
 
+        edtCodProduto.Text := '0';
+        edtCodProdutoExit(nil);
+        edtCodProduto.Clear;
+        edtQuantidade.Clear;
+
         btnAddProduto.Enabled := False;
         btnEdtProduto.Enabled := False;
         btnDelProduto.Enabled := False;
@@ -534,7 +539,6 @@ begin
         stbPedidos.Panels[1].Text := 'Status: Fazendo Pedido.';
         pnlDetalhesPedido.Enabled := True;
         pnlCliente.Enabled := False;
-        btnAlterarPedido.Enabled := True;
         dbgPedidos.Enabled := False;
         btnFazerPedido.Enabled := False;
         btnAlterarPedido.Enabled := False;
@@ -543,7 +547,6 @@ begin
         btnCancelarPedido.Enabled := True;
         pnlDetalheGravar.Enabled := True;
         edtCodProduto.SetFocus;
-
         btnAddProduto.Enabled := True;
         btnEdtProduto.Enabled := True;
         btnDelProduto.Enabled := True;
@@ -554,7 +557,6 @@ begin
         pnlCliente.Enabled := False;
         stbPedidos.Panels[1].Text := 'Status: Alterando Pedido.';
         pnlDetalhesPedido.Enabled := True;
-        btnAlterarPedido.Enabled := True;
         dbgPedidos.Enabled := False;
         btnFazerPedido.Enabled := False;
         btnAlterarPedido.Enabled := False;

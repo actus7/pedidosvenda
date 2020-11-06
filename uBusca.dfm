@@ -22,7 +22,7 @@ object frmBusca: TfrmBusca
     Left = 0
     Top = 0
     Width = 485
-    Height = 241
+    Height = 204
     Align = alClient
     DataSource = dsDados
     ReadOnly = True
@@ -32,6 +32,24 @@ object frmBusca: TfrmBusca
     TitleFont.Height = -11
     TitleFont.Name = 'Tahoma'
     TitleFont.Style = []
+  end
+  object pnlBotao: TPanel
+    Left = 0
+    Top = 204
+    Width = 485
+    Height = 37
+    Align = alBottom
+    TabOrder = 1
+    ExplicitTop = 205
+    object btnOk: TButton
+      Left = 384
+      Top = 6
+      Width = 75
+      Height = 25
+      Caption = 'Selecionar'
+      TabOrder = 0
+      OnClick = btnOkClick
+    end
   end
   object dsDados: TDataSource
     Left = 176
