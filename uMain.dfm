@@ -42,7 +42,6 @@ object frmMain: TfrmMain
     Height = 61
     Align = alTop
     TabOrder = 0
-    ExplicitLeft = 1
     DesignSize = (
       565
       61)
@@ -134,7 +133,6 @@ object frmMain: TfrmMain
     Height = 154
     Align = alTop
     TabOrder = 2
-    ExplicitTop = 99
     object grpPedidosCliente: TGroupBox
       Left = 1
       Top = 1
@@ -168,7 +166,6 @@ object frmMain: TfrmMain
     Height = 34
     Align = alTop
     TabOrder = 1
-    ExplicitTop = 65
     DesignSize = (
       565
       34)
@@ -213,8 +210,6 @@ object frmMain: TfrmMain
     Height = 263
     Align = alClient
     TabOrder = 3
-    ExplicitTop = 253
-    ExplicitHeight = 246
     object GroupBox1: TGroupBox
       Left = 1
       Top = 1
@@ -223,7 +218,6 @@ object frmMain: TfrmMain
       Align = alClient
       Caption = 'Produtos do Pedido'
       TabOrder = 0
-      ExplicitHeight = 244
       object dbgPedidoProdutos: TDBGrid
         Left = 2
         Top = 81
@@ -247,8 +241,6 @@ object frmMain: TfrmMain
         Height = 66
         Align = alTop
         TabOrder = 0
-        ExplicitLeft = 1
-        ExplicitTop = 31
         object lblProduto: TLabel
           Left = 28
           Top = 11
@@ -375,7 +367,6 @@ object frmMain: TfrmMain
     Height = 34
     Align = alBottom
     TabOrder = 4
-    ExplicitTop = 499
     DesignSize = (
       565
       34)
@@ -417,146 +408,17 @@ object frmMain: TfrmMain
       item
         Width = 50
       end>
-    ExplicitLeft = 8
-    ExplicitTop = 531
   end
   object dsPedidos: TDataSource
-    DataSet = qryPedidos
+    DataSet = dm.qryPedidos
     OnDataChange = dsPedidosDataChange
     Left = 241
     Top = 204
   end
   object dsPedidosProdutos: TDataSource
-    DataSet = qryPedidosProdutos
+    DataSet = dm.qryPedidosProdutos
+    OnDataChange = dsPedidosProdutosDataChange
     Left = 241
     Top = 398
-  end
-  object qryPedidos: TFDQuery
-    Connection = dm.conMariaDB
-    SQL.Strings = (
-      
-        'select pedidos.codigo, pedidos.dataemissao, pedidos.valortotal, ' +
-        'pedidos.codcliente'
-      'from pedidos'
-      'inner join clientes on clientes.codigo = pedidos.codcliente'
-      'where pedidos.codcliente = :codcliente')
-    Left = 241
-    Top = 148
-    ParamData = <
-      item
-        Name = 'CODCLIENTE'
-        ParamType = ptInput
-      end>
-    object qryPedidoscodigo: TFDAutoIncField
-      Alignment = taCenter
-      DisplayLabel = 'C'#243'digo'
-      FieldName = 'codigo'
-      Origin = 'codigo'
-      ProviderFlags = [pfInWhere, pfInKey]
-    end
-    object qryPedidosdataemissao: TDateTimeField
-      Alignment = taCenter
-      DisplayLabel = 'Data da Emiss'#227'o'
-      FieldName = 'dataemissao'
-      Origin = 'dataemissao'
-      Required = True
-    end
-    object qryPedidosvalortotal: TSingleField
-      DisplayLabel = 'Valor Total'
-      DisplayWidth = 20
-      FieldName = 'valortotal'
-      Origin = 'valortotal'
-      Required = True
-      EditFormat = '###,###,##0.00'
-    end
-    object qryPedidoscodcliente: TIntegerField
-      FieldName = 'codcliente'
-      Origin = 'codcliente'
-      Required = True
-      Visible = False
-    end
-  end
-  object qryPedidosProdutos: TFDQuery
-    AfterScroll = qryPedidosProdutosAfterScroll
-    OnCalcFields = qryPedidosProdutosCalcFields
-    Connection = dm.conMariaDB
-    SQL.Strings = (
-      'select pedidosprodutos.codigo,'
-      '       pedidosprodutos.codproduto, '
-      '       produtos.descricao, '
-      '       pedidosprodutos.quantidade, '
-      '       pedidosprodutos.valorunitario, '
-      
-        '       CAST(pedidosprodutos.quantidade * pedidosprodutos.valorun' +
-        'itario AS DECIMAL(10,2)) as valortotal'
-      'from pedidosprodutos'
-      
-        'inner join pedidos on pedidos.codigo = pedidosprodutos.codpedido' +
-        ' '
-      
-        'inner join produtos on produtos.codigo = pedidosprodutos.codprod' +
-        'uto'
-      'where pedidos.codigo = :codpedido')
-    Left = 241
-    Top = 348
-    ParamData = <
-      item
-        Name = 'CODPEDIDO'
-        ParamType = ptInput
-      end>
-    object qryPedidosProdutoscodigo: TFDAutoIncField
-      DisplayLabel = 'C'#243'digo'
-      FieldName = 'codigo'
-      Origin = 'codigo'
-      ProviderFlags = [pfInWhere, pfInKey]
-    end
-    object qryPedidosProdutoscodproduto: TIntegerField
-      FieldName = 'codproduto'
-      Origin = 'codproduto'
-      Required = True
-      Visible = False
-    end
-    object qryPedidosProdutosdescricao: TStringField
-      AutoGenerateValue = arDefault
-      DisplayLabel = 'Produto'
-      DisplayWidth = 30
-      FieldName = 'descricao'
-      Origin = 'descricao'
-      ProviderFlags = []
-      ReadOnly = True
-      Size = 150
-    end
-    object qryPedidosProdutosquantidade: TIntegerField
-      DisplayLabel = 'Quantidade'
-      DisplayWidth = 10
-      FieldName = 'quantidade'
-      Origin = 'quantidade'
-      Required = True
-    end
-    object qryPedidosProdutosvalorunitario: TSingleField
-      DisplayLabel = 'Valor Unit'#225'rio'
-      FieldName = 'valorunitario'
-      Origin = 'valorunitario'
-      Required = True
-      EditFormat = '###,###,##0.00'
-    end
-    object qryPedidosProdutosvalortotal: TBCDField
-      AutoGenerateValue = arDefault
-      DisplayLabel = 'Valor Total'
-      DisplayWidth = 10
-      FieldName = 'valortotal'
-      Origin = 'valortotal'
-      ProviderFlags = []
-      ReadOnly = True
-      EditFormat = '###,###,##0.00'
-      Precision = 10
-      Size = 2
-    end
-    object qryPedidosProdutosvalortotalpedido: TCurrencyField
-      FieldKind = fkCalculated
-      FieldName = 'valortotalpedido'
-      Visible = False
-      Calculated = True
-    end
   end
 end

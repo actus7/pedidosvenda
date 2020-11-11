@@ -23,10 +23,26 @@ type
     qryProdutoscodigo: TFDAutoIncField;
     qryProdutosdescricao: TStringField;
     qryProdutosprecovenda: TSingleField;
+    qryPedidos: TFDQuery;
+    qryPedidoscodigo: TFDAutoIncField;
+    qryPedidosdataemissao: TDateTimeField;
+    qryPedidosvalortotal: TSingleField;
+    qryPedidoscodcliente: TIntegerField;
+    qryPedidosProdutos: TFDQuery;
+    qryPedidosProdutoscodigo: TFDAutoIncField;
+    qryPedidosProdutoscodproduto: TIntegerField;
+    qryPedidosProdutosdescricao: TStringField;
+    qryPedidosProdutosquantidade: TIntegerField;
+    qryPedidosProdutosvalorunitario: TSingleField;
+    qryPedidosProdutosvalortotal: TBCDField;
+    qryPedidosProdutosvalortotalpedido: TCurrencyField;
+    procedure qryPedidosProdutosCalcFields(DataSet: TDataSet);
+    procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
+    FValorTotalPedido: Currency;
   end;
 
 var
@@ -35,7 +51,16 @@ var
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
-
 {$R *.dfm}
+
+procedure Tdm.DataModuleCreate(Sender: TObject);
+begin
+  FValorTotalPedido := 0;
+end;
+
+procedure Tdm.qryPedidosProdutosCalcFields(DataSet: TDataSet);
+begin
+  FValorTotalPedido := FValorTotalPedido + dm.qryPedidosProdutosvalortotal.AsCurrency;
+end;
 
 end.

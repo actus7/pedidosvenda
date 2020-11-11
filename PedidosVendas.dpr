@@ -5,15 +5,15 @@ uses
   uMain in 'uMain.pas' {frmMain},
   Vcl.TCustomEditHelper in 'Vcl.TCustomEditHelper.pas',
   uDM in 'uDM.pas' {dm: TDataModule},
-  uBusca in 'uBusca.pas' {frmBusca};
+  uBusca in 'uBusca.pas' {frmBusca},
+  Classes.SQL in 'Classes.SQL.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(Tdm, dm);
-  Application.CreateForm(TfrmBusca, frmBusca);
+  Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
 end.

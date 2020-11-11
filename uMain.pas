@@ -9,12 +9,9 @@ uses
   Vcl.DBGrids, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
   FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
-  Vcl.ComCtrls, System.TypInfo;
+  Vcl.ComCtrls, System.TypInfo, Pedidos.Tipos, Pedidos.Utils;
 
 type
-  TAcaoPedido = (tapVer, tapIncluir, tapAlterar);
-  TAcaoPedidoProduto = (tppVer, tppIncluir, tppAlterar);
-
   TfrmMain = class(TForm)
     lblPedidosVenda: TLabel;
     pnlCliente: TPanel;
@@ -41,25 +38,12 @@ type
     lblNomeProduto: TLabel;
     dsPedidos: TDataSource;
     dsPedidosProdutos: TDataSource;
-    qryPedidos: TFDQuery;
-    qryPedidoscodigo: TFDAutoIncField;
-    qryPedidosdataemissao: TDateTimeField;
-    qryPedidosvalortotal: TSingleField;
-    qryPedidoscodcliente: TIntegerField;
     stbPedidos: TStatusBar;
-    qryPedidosProdutos: TFDQuery;
-    qryPedidosProdutoscodigo: TFDAutoIncField;
-    qryPedidosProdutosdescricao: TStringField;
-    qryPedidosProdutosquantidade: TIntegerField;
-    qryPedidosProdutosvalorunitario: TSingleField;
-    qryPedidosProdutoscodproduto: TIntegerField;
     btnCancelarPedido: TButton;
     btnBuscaCliente: TBitBtn;
     btnBuscaProduto: TBitBtn;
     btnAddProduto: TBitBtn;
     btnEdtProduto: TBitBtn;
-    qryPedidosProdutosvalortotalpedido: TCurrencyField;
-    qryPedidosProdutosvalortotal: TBCDField;
     btnDelProduto: TBitBtn;
     btnCanProduto: TBitBtn;
     btnBuscarPedido: TButton;
@@ -78,24 +62,20 @@ type
     procedure btnGravarPedidoClick(Sender: TObject);
     procedure btnEdtProdutoClick(Sender: TObject);
     procedure btnDelProdutoClick(Sender: TObject);
-    procedure qryPedidosProdutosCalcFields(DataSet: TDataSet);
-    procedure qryPedidosProdutosAfterScroll(DataSet: TDataSet);
     procedure btnCanProdutoClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnCancelarPedidoClick(Sender: TObject);
     procedure btnBuscarPedidoClick(Sender: TObject);
     procedure btnBuscarCancelarPedidoClick(Sender: TObject);
+    procedure dsPedidosProdutosDataChange(Sender: TObject; Field: TField);
   private
     { Private declarations }
     FAcaoPedido: TAcaoPedido;
     FAcaoPedidoProduto: TAcaoPedidoProduto;
-    FValorTotalPedido: Currency;
     procedure CarregaPedidosCliente(pCodigoCliente: integer);
     procedure CarregaProdutosPedido(pCodigoPedido: integer);
     procedure setAcaoPedido(const Value: TAcaoPedido);
-    function GravarProdutosPedido(pCodPedido, pCodProduto, pQtdProduto: integer; pValorProduto: Currency): Boolean;
     procedure setAcaoPedidoProduto(const Value: TAcaoPedidoProduto);
-    procedure AtualizaValorTotalPedido;
     function CancelarPedido: Boolean;
     function BuscarPedidoPorCodigo(pCodPedido: integer; out pCodCliente: integer): Boolean;
     property AcaoPedido: TAcaoPedido read FAcaoPedido write setAcaoPedido;
@@ -114,85 +94,25 @@ implementation
 uses
   uDM, uBusca;
 
-function TfrmMain.GravarProdutosPedido(pCodPedido, pCodProduto, pQtdProduto: integer; pValorProduto: Currency): Boolean;
-const
-  SQLInsert: String = 'INSERT INTO pedidosprodutos (codpedido, codproduto, quantidade, valorunitario) VALUES (:codpedido, :codproduto, :quantidade, :valorunitario)';
-  SQLUpdate: String = 'UPDATE pedidosprodutos SET codproduto = :codproduto, quantidade = :quantidade WHERE codigo = :codpedidoproduto';
-var
-  qryTmp: TFDQuery;
-begin
-  Result := True;
-  qryTmp := TFDQuery.Create(nil);
-  try
-    dm.conMariaDB.StartTransaction;
-    try
-      qryTmp.Connection := dm.conMariaDB;
-      qryTmp.SQL.Clear;
-      case AcaoPedidoProduto of
-        tppIncluir:
-          begin
-            qryTmp.SQL.Add(SQLInsert);
-            qryTmp.Params.ParamByName('codpedido').Value := pCodPedido;
-            qryTmp.Params.ParamByName('codproduto').Value := pCodProduto;
-            qryTmp.Params.ParamByName('quantidade').Value := pQtdProduto;
-            qryTmp.Params.ParamByName('valorunitario').AsCurrency := pValorProduto;
-          end;
-        tppAlterar:
-          begin
-            qryTmp.SQL.Add(SQLUpdate);
-            qryTmp.Params.ParamByName('codproduto').Value := pCodProduto;
-            qryTmp.Params.ParamByName('quantidade').Value := pQtdProduto;
-            qryTmp.Params.ParamByName('codpedidoproduto').Value := qryPedidosProdutoscodigo.Value;
-          end;
-      end;
-      qryTmp.ExecSQL;
-      dm.conMariaDB.Commit;
-    except
-      Result := False;
-      dm.conMariaDB.Rollback;
-      raise;
-    end;
-  finally
-    qryTmp.Free;
-    qryPedidosProdutos.Close;
-    qryPedidosProdutos.Open;
-  end;
-end;
-
-procedure TfrmMain.qryPedidosProdutosAfterScroll(DataSet: TDataSet);
-begin
-  stbPedidos.Panels[2].Text := 'Valor do Pedido: ' + CurrToStrF(FValorTotalPedido, ffFixed, 2);
-end;
-
-procedure TfrmMain.qryPedidosProdutosCalcFields(DataSet: TDataSet);
-begin
-  FValorTotalPedido := FValorTotalPedido + qryPedidosProdutosvalortotal.AsCurrency;
-end;
-
-procedure TfrmMain.AtualizaValorTotalPedido;
-begin
-  dm.conMariaDB.StartTransaction;
-  try
-    qryPedidos.Edit;
-    qryPedidosvalortotal.Value := FValorTotalPedido;
-    qryPedidos.Post;
-    dm.conMariaDB.Commit;
-  except
-    dm.conMariaDB.Rollback;
-    raise;
-  end;
-end;
-
 procedure TfrmMain.btnAddProdutoClick(Sender: TObject);
+var
+  RecNo: integer;
 begin
-  if lblNomeProduto.Caption <> '' then
+  if not Trim(lblNomeProduto.Caption).IsEmpty then
   begin
-    if GravarProdutosPedido(qryPedidoscodigo.Value, dm.qryProdutoscodigo.Value, StrToIntDef(edtQuantidade.Text, 0), dm.qryProdutosprecovenda.AsCurrency) then
-    begin
-      AtualizaValorTotalPedido;
-      edtCodProduto.Clear;
-      edtQuantidade.Clear;
-      AcaoPedidoProduto := tppIncluir;
+    try
+      RecNo := dm.qryPedidos.RecNo;
+      if TPedidos.GravarProdutosPedido(dm.qryPedidoscodigo.Value, dm.qryProdutoscodigo.Value, StrToIntDef(edtQuantidade.Text, 0), dm.qryProdutosprecovenda.AsCurrency,
+        AcaoPedidoProduto) then
+      begin
+        edtCodProduto.Clear;
+        edtQuantidade.Clear;
+        AcaoPedidoProduto := tppIncluir;
+      end;
+    finally
+      dm.qryPedidos.Close;
+      dm.qryPedidos.Open;
+      dm.qryPedidos.RecNo := RecNo;
     end;
   end
   else
@@ -269,7 +189,7 @@ begin
   begin
     edtCodCliente.Text := IntToStr(lCodCliente);
     edtCodClienteExit(Sender);
-    qryPedidos.Locate('codigo', lCodPedido, []);
+    dm.qryPedidos.Locate('codigo', lCodPedido, []);
     btnExcluirPedidoClick(Sender);
   end;
 end;
@@ -284,7 +204,7 @@ begin
   begin
     edtCodCliente.Text := IntToStr(lCodCliente);
     edtCodClienteExit(Sender);
-    qryPedidos.Locate('codigo', lCodPedido, []);
+    dm.qryPedidos.Locate('codigo', lCodPedido, []);
   end;
 end;
 
@@ -309,7 +229,7 @@ begin
           begin
             dm.conMariaDB.StartTransaction;
             try
-              qryPedidos.Delete;
+              dm.qryPedidos.Delete;
               dm.conMariaDB.Commit;
               AcaoPedido := tapVer;
             except
@@ -340,31 +260,17 @@ end;
 procedure TfrmMain.btnDelProdutoClick(Sender: TObject);
 begin
   if (not dbgPedidoProdutos.DataSource.DataSet.IsEmpty) then
-  begin
-    if MessageDlg('Confirma a exclusão do Produto?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    begin
-      dm.conMariaDB.StartTransaction;
-      try
-        qryPedidosProdutos.Delete;
-        dm.conMariaDB.Commit;
-        edtCodProduto.SetFocus;
-        AtualizaValorTotalPedido;
-      except
-        dm.conMariaDB.Rollback;
-        raise;
-      end;
-    end;
-  end;
+    TPedidos.RemoverProdutoPedido(dm.qryPedidosProdutoscodigo.Value);
 end;
 
 procedure TfrmMain.btnEdtProdutoClick(Sender: TObject);
 begin
   if (not dbgPedidoProdutos.DataSource.DataSet.IsEmpty) then
   begin
-    edtCodProduto.Text := qryPedidosProdutoscodigo.AsString;
+    edtCodProduto.Text := dm.qryPedidosProdutoscodproduto.AsString;
     edtCodProdutoExit(Sender);
     edtCodProduto.SetFocus;
-    edtQuantidade.Text := qryPedidosProdutosquantidade.AsString;
+    edtQuantidade.Text := dm.qryPedidosProdutosquantidade.AsString;
     AcaoPedidoProduto := tppAlterar;
   end;
 end;
@@ -377,7 +283,7 @@ begin
     begin
       dm.conMariaDB.StartTransaction;
       try
-        qryPedidos.Delete;
+        dm.qryPedidos.Delete;
         dm.conMariaDB.Commit;
       except
         dm.conMariaDB.Rollback;
@@ -391,11 +297,11 @@ procedure TfrmMain.btnFazerPedidoClick(Sender: TObject);
 begin
   dm.conMariaDB.StartTransaction;
   try
-    qryPedidos.Insert;
-    qryPedidoscodcliente.Value := dm.qryClientescodigo.Value;
-    qryPedidosdataemissao.Value := Now();
-    qryPedidosvalortotal.Value := 0;
-    qryPedidos.Post;
+    dm.qryPedidos.Insert;
+    dm.qryPedidoscodcliente.Value := dm.qryClientescodigo.Value;
+    dm.qryPedidosdataemissao.Value := Now();
+    dm.qryPedidosvalortotal.Value := 0;
+    dm.qryPedidos.Post;
     dm.conMariaDB.Commit;
     AcaoPedido := tapIncluir;
   except
@@ -412,26 +318,31 @@ end;
 
 procedure TfrmMain.CarregaPedidosCliente(pCodigoCliente: integer);
 begin
-  qryPedidos.Close;
-  qryPedidos.Params.ParamByName('codcliente').Value := pCodigoCliente;
-  qryPedidos.Open;
+  dm.qryPedidos.Close;
+  dm.qryPedidos.Params.ParamByName('codcliente').Value := pCodigoCliente;
+  dm.qryPedidos.Open;
 end;
 
 procedure TfrmMain.CarregaProdutosPedido(pCodigoPedido: integer);
 begin
-  qryPedidosProdutos.Close;
-  qryPedidosProdutos.Params.ParamByName('codpedido').Value := pCodigoPedido;
-  qryPedidosProdutos.Open;
+  dm.qryPedidosProdutos.Close;
+  dm.qryPedidosProdutos.Params.ParamByName('codpedido').Value := pCodigoPedido;
+  dm.qryPedidosProdutos.Open;
 end;
 
 procedure TfrmMain.dsPedidosDataChange(Sender: TObject; Field: TField);
 begin
-  stbPedidos.Panels[0].Text := 'Pedido: ' + qryPedidoscodigo.AsString;
-  btnAlterarPedido.Enabled := qryPedidos.RecordCount > 0;
+  dm.FValorTotalPedido := 0;
+  stbPedidos.Panels[0].Text := 'Pedido: ' + dm.qryPedidoscodigo.AsString;
+  btnAlterarPedido.Enabled := dm.qryPedidos.RecordCount > 0;
   btnExcluirPedido.Enabled := btnAlterarPedido.Enabled;
   stbPedidos.Panels[2].Text := '';
-  FValorTotalPedido := 0;
-  CarregaProdutosPedido(qryPedidoscodigo.Value);
+  CarregaProdutosPedido(dm.qryPedidoscodigo.Value);
+end;
+
+procedure TfrmMain.dsPedidosProdutosDataChange(Sender: TObject; Field: TField);
+begin
+  stbPedidos.Panels[2].Text := 'Valor do Pedido: ' + CurrToStrF(dm.FValorTotalPedido, ffFixed, 2);
 end;
 
 procedure TfrmMain.edtCodClienteExit(Sender: TObject);
@@ -471,7 +382,7 @@ end;
 
 procedure TfrmMain.edtQuantidadeChange(Sender: TObject);
 begin
-  btnAddProduto.Enabled := ((not Trim(lblNomeProduto.Caption).IsEmpty) and (StrToIntDef(edtQuantidade.Text, 0) > 0) and ((AcaoPedido = tapAlterar) or (AcaoPedido = tapIncluir)));
+  btnAddProduto.Enabled := ((not Trim(lblNomeProduto.Caption).IsEmpty) and (StrToIntDef(edtQuantidade.Text, 0) > 0) and (AcaoPedido in [tapAlterar, tapIncluir]));
 end;
 
 procedure TfrmMain.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
